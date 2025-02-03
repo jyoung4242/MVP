@@ -1,0 +1,19 @@
+
+
+[x] hash out basic server
+[ ] create server based FSM
+[ ] setup client with scenes
+[ ] game state on server
+[ ] update loop on client
+[ ] setup Scenes on client
+[ ] setup player entities on server and client
+[ ] setup bullet entities on server and client
+[ ] setup enemy entities on server and client
+[ ] setup room building logic on server
+[ ] setup level building logic on server
+[ ] setup gamepad, keyboard, mouse, and touch controls on clients, connect to server
+[ ] setup boss generator on server
+[ ] setup boss entity on clients
+[ ] setup map data on server, and show level map on client
+[ ] setup room actor on client, and receive room events from server
+[ ] setup client menus
