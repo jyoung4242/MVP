@@ -1,8 +1,22 @@
-import { Actor, Collider, CollisionContact, CollisionType, Color, Engine, Side, Vector } from "excalibur";
+import {
+  Actor,
+  Collider,
+  CollisionContact,
+  CollisionType,
+  Color,
+  Engine,
+  EventEmitter,
+  Side,
+  Trigger,
+  TriggerEvents,
+  Vector,
+} from "excalibur";
 import { ActorSignals } from "../Lib/CustomEmitterManager";
-import { RoomActor } from "./room";
-import { HallwayActor } from "./hallway";
 import { playerColliderGroup } from "../Lib/colliderGroups";
+import { Door, RoomActor } from "./room";
+import { HallwayActor } from "./hallway";
+import { getNextBullet } from "../Lib/ObjectPools";
+import { Key } from "./Key";
 
 enum StickPosition {
   "Left" = "Left",
@@ -17,11 +31,21 @@ enum StickPosition {
 }
 
 type Direction = "Left" | "Right" | "Up" | "Down" | "upLeft" | "upRight" | "downLeft" | "downRight";
+type direction = "Left" | "Right" | "Up" | "Down";
 
 export class Player extends Actor {
   lStick: StickPosition = StickPosition.Idle;
   rStick: StickPosition = StickPosition.Idle;
   speed: number = 200;
+  firingRate: number = 5;
+  keypressDirections: direction[] = [];
+  wallCollisionDirection: direction[] = [];
+  isCollidingUp: boolean = false;
+  isCollidingDown: boolean = false;
+  isCollidingLeft: boolean = false;
+  isCollidingRight: boolean = false;
+  keysInInventory: number = 0;
+  canOpenDoors: boolean = true;
 
   constructor(pos: Vector) {
     super({
@@ -53,22 +77,158 @@ export class Player extends Actor {
     ActorSignals.on("rightStickUpLeft", data => (this.rStick = StickPosition.UpLeft));
     ActorSignals.on("rightStickUpRight", data => (this.rStick = StickPosition.UpRight));
     ActorSignals.on("rightStickIdle", data => (this.rStick = StickPosition.Idle));
+    ActorSignals.on("keypressChanged", data => {
+      this.keypressDirections = [];
+      this.keypressDirections = [...(data.keypress as direction[])];
+    });
+    ActorSignals.on("idle", data => {
+      this.keypressDirections = [];
+      this.lStick = StickPosition.Idle;
+    });
+  }
 
-    ActorSignals.on("walkDown", data => (this.vel = new Vector(0, this.speed)));
-    ActorSignals.on("walkUp", data => (this.vel = new Vector(0, -this.speed)));
-    ActorSignals.on("walkLeft", data => (this.vel = new Vector(-this.speed, 0)));
-    ActorSignals.on("walkRight", data => (this.vel = new Vector(this.speed, 0)));
+  addCollisionToArray(side: direction) {
+    //check for collision not existing in array
+    if (!this.wallCollisionDirection.includes(side)) {
+      this.wallCollisionDirection.push(side);
+    }
+  }
 
-    ActorSignals.on("walkDownLeft", data => (this.vel = new Vector(-this.speed, this.speed)));
-    ActorSignals.on("walkDownRight", data => (this.vel = new Vector(this.speed, this.speed)));
-    ActorSignals.on("walkUpLeft", data => (this.vel = new Vector(-this.speed, -this.speed)));
-    ActorSignals.on("walkUpRight", data => (this.vel = new Vector(this.speed, -this.speed)));
-    ActorSignals.on("idle", data => (this.vel = new Vector(0, 0)));
+  removeCollisionFromArray(side: direction) {
+    if (this.wallCollisionDirection.includes(side)) {
+      this.wallCollisionDirection.splice(this.wallCollisionDirection.indexOf(side), 1);
+    }
   }
 
   onCollisionStart(self: Collider, other: Collider, side: Side, contact: CollisionContact): void {
-    console.log("collision", other);
+    if (other.owner instanceof RoomActor || other.owner instanceof Door || other.owner instanceof HallwayActor) {
+      switch (side) {
+        case Side.Top:
+          this.addCollisionToArray("Down");
+          break;
+        case Side.Bottom:
+          this.addCollisionToArray("Up");
+          break;
+        case Side.Left:
+          this.addCollisionToArray("Right");
+          break;
+        case Side.Right:
+          this.addCollisionToArray("Left");
+          break;
+      }
+    }
+
+    if (other.owner instanceof Key) {
+      other.owner.kill();
+      this.keysInInventory++;
+    }
   }
 
-  onCollisionEnd(self: Collider, other: Collider, side: Side, lastContact: CollisionContact): void {}
+  onCollisionEnd(self: Collider, other: Collider, side: Side, lastContact: CollisionContact): void {
+    if (other.owner instanceof RoomActor || other.owner instanceof Door || other.owner instanceof HallwayActor) {
+      switch (side) {
+        case Side.Top:
+          this.removeCollisionFromArray("Down");
+          break;
+        case Side.Bottom:
+          this.removeCollisionFromArray("Up");
+          break;
+        case Side.Left:
+          this.removeCollisionFromArray("Right");
+          break;
+        case Side.Right:
+          this.removeCollisionFromArray("Left");
+          break;
+      }
+    }
+  }
+
+  onPreUpdate(engine: Engine, delta: number): void {
+    if (this.keypressDirections.length > 1) {
+      if (this.keypressDirections.includes("Up") && this.keypressDirections.includes("Left")) this.lStick = StickPosition.UpLeft;
+      if (this.keypressDirections.includes("Up") && this.keypressDirections.includes("Right")) this.lStick = StickPosition.UpRight;
+      if (this.keypressDirections.includes("Down") && this.keypressDirections.includes("Left")) this.lStick = StickPosition.DownLeft;
+      if (this.keypressDirections.includes("Down") && this.keypressDirections.includes("Right")) this.lStick = StickPosition.DownRight;
+    } else if (this.keypressDirections.length == 1) {
+      if (this.keypressDirections.includes("Up")) this.lStick = StickPosition.Up;
+      if (this.keypressDirections.includes("Down")) this.lStick = StickPosition.Down;
+      if (this.keypressDirections.includes("Left")) this.lStick = StickPosition.Left;
+      if (this.keypressDirections.includes("Right")) this.lStick = StickPosition.Right;
+    }
+
+    if (this.lStick != "Idle") {
+      switch (this.lStick) {
+        case "Left":
+          if (!this.wallCollisionDirection.includes("Right")) this.vel = new Vector(-this.speed, 0);
+          else this.vel = new Vector(0, 0);
+          break;
+        case "Right":
+          if (!this.wallCollisionDirection.includes("Left")) this.vel = new Vector(this.speed, 0);
+          else this.vel = new Vector(0, 0);
+          break;
+        case "Up":
+          if (!this.wallCollisionDirection.includes("Down")) this.vel = new Vector(0, -this.speed);
+          else this.vel = new Vector(0, 0);
+          break;
+        case "Down":
+          if (!this.wallCollisionDirection.includes("Up")) this.vel = new Vector(0, this.speed);
+          else this.vel = new Vector(0, 0);
+          break;
+        case "upLeft":
+          this.vel = new Vector(-this.speed, -this.speed);
+          if (this.wallCollisionDirection.includes("Right")) this.vel.x = 0;
+          if (this.wallCollisionDirection.includes("Down")) this.vel.y = 0;
+          break;
+        case "downLeft":
+          this.vel = new Vector(-this.speed, this.speed);
+          if (this.wallCollisionDirection.includes("Right")) this.vel.x = 0;
+          if (this.wallCollisionDirection.includes("Up")) this.vel.y = 0;
+          break;
+        case "upRight":
+          this.vel = new Vector(this.speed, -this.speed);
+          if (this.wallCollisionDirection.includes("Left")) this.vel.x = 0;
+          if (this.wallCollisionDirection.includes("Down")) this.vel.y = 0;
+          break;
+
+        case "downRight":
+          this.vel = new Vector(this.speed, this.speed);
+          if (this.wallCollisionDirection.includes("Left")) this.vel.x = 0;
+          if (this.wallCollisionDirection.includes("Up")) this.vel.y = 0;
+          break;
+
+        default:
+          break;
+      }
+    } else {
+      this.vel = Vector.Zero;
+    }
+
+    if (this.rStick != "Idle") {
+      let bullet = getNextBullet();
+      bullet.setBulletParams(this.pos, convertStickToVector(this.rStick));
+      engine.add(bullet);
+    }
+  }
+}
+
+function convertStickToVector(dir: StickPosition): Vector {
+  switch (dir) {
+    case StickPosition.Up:
+      return new Vector(0, -1);
+    case StickPosition.Down:
+      return new Vector(0, 1);
+    case StickPosition.Left:
+      return new Vector(-1, 0);
+    case StickPosition.Right:
+      return new Vector(1, 0);
+    case StickPosition.UpLeft:
+      return new Vector(-1, -1);
+    case StickPosition.UpRight:
+      return new Vector(1, -1);
+    case StickPosition.DownLeft:
+      return new Vector(-1, 1);
+    case StickPosition.DownRight:
+      return new Vector(1, 1);
+  }
+  return Vector.Zero;
 }

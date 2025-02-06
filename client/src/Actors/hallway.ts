@@ -1,35 +1,40 @@
-import { Actor, CollisionType, Color, Font, Label, Rectangle, toRadians, Vector } from "excalibur";
+import { Actor, CollisionType, Color, CompositeCollider, Font, Label, Rectangle, Shape, toRadians, vec, Vector } from "excalibur";
 import { Edge, Room } from "../Lib/levelBuilder";
 import { wallColliderGroup } from "../Lib/colliderGroups";
-
-let hallwayShape = new Rectangle({ width: 200, height: 500, color: Color.Gray, strokeColor: Color.White });
 
 export class HallwayActor extends Actor {
   constructor(edge: Edge, rooms: Room[]) {
     const { pos, rotation } = findHallwayPosition(edge, rooms);
+    const topEdgeCollider = Shape.Box(15, 510, Vector.Half, vec(-110, 0));
+    const bottomEdgeCollider = Shape.Box(15, 510, Vector.Half, vec(110, 0));
+    const compCollider = new CompositeCollider([topEdgeCollider, bottomEdgeCollider]);
+    compCollider.compositeStrategy = "separate";
+
     super({
-      width: 200,
-      height: 500,
       pos,
       rotation,
       opacity: 0.5,
+      collider: compCollider,
       collisionType: CollisionType.Passive,
       collisionGroup: wallColliderGroup,
     });
+    this.name = "hallway #" + this.id;
+    let hallwayShape = new Rectangle({ width: 200, height: 500, color: Color.Gray, strokeColor: Color.White });
     this.graphics.use(hallwayShape);
+  }
 
-    let roomtext = `from: ${edge.from.index}, to: ${edge.to.index}`;
+  isPointInHallway(point: Vector): boolean {
+    if (this.rotation == toRadians(0) || this.rotation == toRadians(180)) {
+      if (point.x < this.pos.x + 100 && point.x > this.pos.x - 100 && point.y < this.pos.y + 250 && point.y > this.pos.y - 250) {
+        return true;
+      }
+    } else if (this.rotation == toRadians(90) || this.rotation == toRadians(270)) {
+      if (point.x < this.pos.x + 250 && point.x > this.pos.x - 250 && point.y < this.pos.y + 100 && point.y > this.pos.y - 100) {
+        return true;
+      }
+    }
 
-    let text = new Label({
-      text: roomtext,
-      font: new Font({
-        family: "Arial",
-        size: 20,
-        color: Color.White,
-      }),
-    });
-
-    this.addChild(text);
+    return false;
   }
 }
 

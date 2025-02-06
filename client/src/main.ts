@@ -8,6 +8,7 @@ import { FinalScene } from "./Scenes/Final";
 import { StagingScene } from "./Scenes/Staging";
 import { GamepadControl } from "./Lib/Gamepad";
 import { KeyboardControl } from "./Lib/Keyboard";
+import { MouseManager } from "./Lib/MouseInput";
 
 const game = new Engine({
   width: 800, // the width of the canvas
@@ -30,6 +31,7 @@ const game = new Engine({
         in: new FadeInOut({ duration: 500, direction: "in", color: Color.Black }),
         out: new FadeInOut({ duration: 500, direction: "out", color: Color.Black }),
       },
+      //loader: CustomLoader,
     },
     staging: {
       scene: StagingScene,
@@ -49,14 +51,16 @@ const game = new Engine({
 });
 
 const gamepad = new GamepadControl(game);
-console.log(gamepad);
 const keyboard = new KeyboardControl(game);
+const MouseInput = new MouseManager(game);
 
 await game.start();
+//game.toggleDebug();
 game.goToScene("title", {
   sceneActivationData: {
     gamepad: gamepad,
     keyboard: keyboard,
+    mouse: MouseInput,
   },
 });
 

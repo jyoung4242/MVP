@@ -3,26 +3,31 @@ import { UI, UIView } from "@peasy-lib/peasy-ui";
 import { GamepadControl } from "../Lib/Gamepad";
 import { Player } from "../Actors/player";
 import { KeyboardControl } from "../Lib/Keyboard";
+import { MouseManager } from "../Lib/MouseInput";
 
 export class TitleScene extends Scene {
   ui: UIView | null = null;
   gpad: GamepadControl | null = null;
   kboard: KeyboardControl | null = null;
+  mouse: MouseManager | null = null;
 
   constructor() {
     super();
   }
 
-  async onActivate(context: SceneActivationContext<{ gamepad: GamepadControl; keyboard: KeyboardControl }>): Promise<void> {
+  async onActivate(
+    context: SceneActivationContext<{ gamepad: GamepadControl; keyboard: KeyboardControl; mouse: MouseManager }>
+  ): Promise<void> {
     (this.ui as UIView) = UI.create(document.getElementById("ui") as HTMLDivElement, new TitleSceneUI(this), TitleSceneUI.template);
     await (this.ui as UIView).attached;
     this.engine = context.engine;
     this.gpad = (context.data as { gamepad: GamepadControl }).gamepad;
     this.kboard = (context.data as { keyboard: KeyboardControl }).keyboard;
+    this.mouse = (context.data as { mouse: MouseManager }).mouse;
+
     //get screensize and adjust camera zoom
     const screensize = this.engine.screen;
     this.camera.zoom = screensize.viewport.width / 1100;
-    console.log(this.camera.zoom);
   }
 
   async onDeactivate(context: SceneActivationContext<unknown>): Promise<void> {
@@ -42,7 +47,6 @@ export class TitleScene extends Scene {
     //get screensize and adjust camera zoom
     const screensize = this.engine.screen;
     this.camera.zoom = screensize.viewport.width / 1100;
-    console.log(this.camera.zoom);
   }
 }
 
@@ -98,7 +102,9 @@ class TitleSceneUI {
   `;
 
   solo = () => {
-    this.owner.engine.goToScene("game", { sceneActivationData: { gamepad: this.owner.gpad, keyboard: this.owner.kboard } });
+    this.owner.engine.goToScene("game", {
+      sceneActivationData: { gamepad: this.owner.gpad, keyboard: this.owner.kboard, mouse: this.owner.mouse },
+    });
   };
   coop = () => {};
 

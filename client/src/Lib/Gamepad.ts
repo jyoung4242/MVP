@@ -43,7 +43,7 @@ export class GamepadControl {
     this.l_ud = engine.input.gamepads.at(this.gamePadIndex).getAxes(Axes.LeftStickY);
     this.r_lr = engine.input.gamepads.at(this.gamePadIndex).getAxes(Axes.RightStickX);
     this.r_ud = engine.input.gamepads.at(this.gamePadIndex).getAxes(Axes.RightStickY);
-    console.log(this.l_lr, this.l_ud, this.r_lr, this.r_ud);
+    //console.log(this.l_lr, this.l_ud, this.r_lr, this.r_ud);
 
     if (this.r_ud < -this.threshold && this.r_lr < -this.threshold) {
       ActorSignals.emit("rightStickUpLeft");

@@ -1,46 +1,42 @@
 import { Engine, Keys } from "excalibur";
 import { ActorSignals } from "./CustomEmitterManager";
 
+type directions = "Left" | "Right" | "Up" | "Down";
+
 export class KeyboardControl {
-  keyboardInputTiker = 0;
+  directions: directions[] = [];
   constructor(engine: Engine) {}
 
   update(engine: Engine, delta: number) {
-    this.keyboardInputTiker++;
+    const oldDirections = [...this.directions];
+    this.directions = [];
+    if (engine.input.keyboard.isHeld(Keys.Left)) this.directions.push("Left");
+    if (engine.input.keyboard.isHeld(Keys.Right)) this.directions.push("Right");
+    if (engine.input.keyboard.isHeld(Keys.Up)) this.directions.push("Up");
+    if (engine.input.keyboard.isHeld(Keys.Down)) this.directions.push("Down");
+    //add wasd
+    if (engine.input.keyboard.isHeld(Keys.W)) this.directions.push("Up");
+    if (engine.input.keyboard.isHeld(Keys.A)) this.directions.push("Left");
+    if (engine.input.keyboard.isHeld(Keys.S)) this.directions.push("Down");
+    if (engine.input.keyboard.isHeld(Keys.D)) this.directions.push("Right");
 
-    if (this.keyboardInputTiker >= 3) {
-      this.keyboardInputTiker = 0;
-
-      if (engine.input.keyboard.isHeld(Keys.Left) && engine.input.keyboard.isHeld(Keys.Down)) {
-        ActorSignals.emit("walkDownLeft");
-        return;
-      } else if (engine.input.keyboard.isHeld(Keys.Right) && engine.input.keyboard.isHeld(Keys.Up)) {
-        ActorSignals.emit("walkUpRight");
-        return;
-      } else if (engine.input.keyboard.isHeld(Keys.Right) && engine.input.keyboard.isHeld(Keys.Down)) {
-        ActorSignals.emit("walkDownRight");
-        return;
-      } else if (engine.input.keyboard.isHeld(Keys.Left) && engine.input.keyboard.isHeld(Keys.Up)) {
-        ActorSignals.emit("walkUpLeft");
-        return;
-      } else if (engine.input.keyboard.isHeld(Keys.Left)) {
-        ActorSignals.emit("walkLeft");
-      } else if (engine.input.keyboard.isHeld(Keys.Right)) {
-        ActorSignals.emit("walkRight");
-      } else if (engine.input.keyboard.isHeld(Keys.Up)) {
-        ActorSignals.emit("walkUp");
-      } else if (engine.input.keyboard.isHeld(Keys.Down)) {
-        ActorSignals.emit("walkDown");
-      }
-
-      if (
-        !engine.input.keyboard.isHeld(Keys.Left) &&
-        !engine.input.keyboard.isHeld(Keys.Right) &&
-        !engine.input.keyboard.isHeld(Keys.Up) &&
-        !engine.input.keyboard.isHeld(Keys.Down)
-      ) {
-        ActorSignals.emit("idle");
-      }
+    if (!areArraysEqual(this.directions, oldDirections)) {
+      if (this.directions.length === 0) ActorSignals.emit("idle");
+      else ActorSignals.emit("keypressChanged", { keypress: this.directions });
     }
   }
+}
+
+function areArraysEqual<T>(a: Array<T>, b: Array<T>): boolean {
+  const setS = new Set(a);
+  const setB = new Set(b);
+  if (setS.size === setB.size) {
+    for (const item of setS) {
+      if (!setB.has(item)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 }

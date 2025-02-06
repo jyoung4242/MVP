@@ -1,5 +1,6 @@
 import { EngineEvents, EventEmitter } from "excalibur";
 import { ActorEvents } from "excalibur/build/dist/Actor";
+import { Door } from "../Actors/room";
 
 export interface CustomActorEventBus extends ActorEvents {
   rightStickUpLeft: {};
@@ -29,6 +30,8 @@ export interface CustomActorEventBus extends ActorEvents {
   walkUpLeft: {};
   walkUpRight: {};
   idle: {};
+  keypressChanged: { keypress: string[] };
+  doorTrigger: { door: Door };
 }
 
 export interface CustomeEngineEventBus extends EngineEvents {}
