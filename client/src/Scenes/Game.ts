@@ -7,6 +7,7 @@ import { Player } from "../Actors/player";
 import { KeyboardControl } from "../Lib/Keyboard";
 import { HallwayActor } from "../Actors/hallway";
 import { MouseManager } from "../Lib/MouseInput";
+import { MiniMap } from "../UI/MiniMap";
 
 export class GameScene extends Scene {
   ui: UIView | null = null;
@@ -15,7 +16,7 @@ export class GameScene extends Scene {
   gpad: GamepadControl | null = null;
   kboard: KeyboardControl | null = null;
   mouse: MouseManager | null = null;
-
+  map: MiniMap | null = null;
   constructor() {
     super();
   }
@@ -61,6 +62,10 @@ export class GameScene extends Scene {
     //get screensize and adjust camera zoom
     const screensize = this.engine.screen;
     this.camera.zoom = screensize.viewport.width / 1100;
+
+    this.map = new MiniMap();
+    this.map.makeMap(leveldata);
+    this.add(this.map);
   }
 
   async onDeactivate(context: SceneActivationContext<unknown>): Promise<void> {
@@ -68,6 +73,10 @@ export class GameScene extends Scene {
       this.ui.destroy();
       await this.ui.detached;
     }
+
+    this.entities.forEach(entity => this.remove(entity));
+
+    this.map = null;
   }
 
   onPreUpdate(engine: Engine, delta: number): void {
@@ -87,6 +96,7 @@ export class GameScene extends Scene {
     //get screensize and adjust camera zoom
     const screensize = this.engine.screen;
     this.camera.zoom = screensize.viewport.width / 1100;
+    if (this.map) this.map.resize(this.camera.zoom);
   }
 }
 

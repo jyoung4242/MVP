@@ -24,6 +24,7 @@ import { doorZoneColliderGroup, wallColliderGroup } from "../Lib/colliderGroups"
 import { Player } from "./player";
 import { HallwayActor } from "./hallway";
 import { Key } from "./Key";
+import { Exit } from "./Exit";
 
 class DoorZone extends Actor {
   private _isColliding: boolean = false;
@@ -252,6 +253,7 @@ class DoorSystem extends Actor {
 export class RoomActor extends Actor {
   roomId: string;
   roomType: RoomType;
+  isLocked: boolean = false;
 
   constructor(room: Room) {
     let roomX = room.roomPos.x * 700 + room.roomPos.x * 500 + 350;
@@ -284,7 +286,7 @@ export class RoomActor extends Actor {
       collisionType: CollisionType.Passive,
       collisionGroup: wallColliderGroup,
     });
-
+    this.isLocked = room.locked ? true : false;
     this.roomType = room.roomType;
     this.graphics.use(roomShape);
     this.roomId = room.roomID;
@@ -302,7 +304,7 @@ export class RoomActor extends Actor {
     this.addChild(rightDoor);
 
     //Lock doors if Boss or Treasure
-    if (this.roomType == RoomType.Treasure) {
+    if (this.isLocked) {
       topDoor.lockDoor();
       bottomDoor.lockDoor();
       leftDoor.lockDoor();
@@ -312,6 +314,12 @@ export class RoomActor extends Actor {
     if (room.roomType == RoomType.Key) {
       let key = new Key();
       this.addChild(key);
+    }
+
+    if (room.roomType == RoomType.Exit) {
+      let exit = new Exit();
+      this.addChild(exit);
+      console.log("adding exit");
     }
   }
 
