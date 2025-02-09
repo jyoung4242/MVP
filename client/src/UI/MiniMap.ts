@@ -21,7 +21,7 @@ export class MiniMap extends ScreenElement {
   hallways: MinimapHallway[] = [];
   cnv: Canvas;
   firstime: boolean = true;
-
+  mapsize: { width: number; height: number } = { width: 0, height: 0 };
   constructor() {
     super({
       width: 250,
@@ -36,9 +36,21 @@ export class MiniMap extends ScreenElement {
       height: 250,
       cache: false,
       draw: ctx => {
-        const ROOM_SIZE = 25; // Room size in pixels
-        const HALLWAY_WIDTH = 5; // Hallway width
-        const HALLWAY_LENGTH = 10; // Hallway length in pixels
+        let numRooms = this.rooms.length;
+        let ROOM_SIZE = 25; // Room size in pixels
+        let HALLWAY_WIDTH = 5; // Hallway width
+        let HALLWAY_LENGTH = 10; // Hallway length in pixels
+        if (numRooms == 0) return;
+
+        if (this.mapsize.width >= 6 || this.mapsize.height >= 6) {
+          ROOM_SIZE = 12;
+          HALLWAY_WIDTH = 3;
+          HALLWAY_LENGTH = 5;
+        } else if (this.mapsize.width >= 4 || this.mapsize.height >= 4) {
+          ROOM_SIZE = 15;
+          HALLWAY_WIDTH = 4;
+          HALLWAY_LENGTH = 7.5;
+        }
 
         ctx.clearRect(0, 0, 250, 250);
         let startingRoomPos = new Vector(this.rooms[0].x, this.rooms[0].y);
@@ -52,14 +64,11 @@ export class MiniMap extends ScreenElement {
           ctx.beginPath();
 
           let fromRoom = hallway.from;
-          console.log("from room: ", fromRoom);
+
           let roomPos = new Vector(fromRoom.roomPos.x, fromRoom.roomPos.y);
-          console.log("room pos: ", roomPos);
 
           let roomXoffset = roomPos.x - startingRoomPos.x;
           let roomYoffset = roomPos.y - startingRoomPos.y;
-
-          console.log("room x, y: ", roomXoffset, roomYoffset);
 
           switch (hallway.direction) {
             case "left":
@@ -93,16 +102,14 @@ export class MiniMap extends ScreenElement {
 
               break;
           }
-          console.log("hallway x, y: ", x, y);
+
           ctx.moveTo(x, y);
           ctx.rect(x, y, width, height);
           ctx.stroke();
 
           //Draw rooms first, with first room being the start room and in the middle o fthe canvas
           this.rooms.forEach((room, index) => {
-            console.log(room);
             ctx.fillStyle = room.color.toString();
-            console.log("room locked: ", room.locked);
             ctx.lineWidth = 2;
             room.locked ? (ctx.strokeStyle = Color.Red.toString()) : (ctx.strokeStyle = room.color.toString());
 
@@ -113,18 +120,15 @@ export class MiniMap extends ScreenElement {
             } else {
               let roomXoffset = room.x - startingRoomPos.x;
               let roomYoffset = room.y - startingRoomPos.y;
-              console.log(roomXoffset, roomYoffset);
               x = 125 - ROOM_SIZE / 2 + roomXoffset * (ROOM_SIZE + 5);
               y = 125 - ROOM_SIZE / 2 + roomYoffset * (ROOM_SIZE + 5);
             }
-            console.log("room x,y: ", x, y);
 
             ctx.fillRect(x, y, ROOM_SIZE, ROOM_SIZE);
             ctx.strokeRect(x, y, ROOM_SIZE, ROOM_SIZE);
           });
         });
 
-        debugger;
         return;
       },
     });
@@ -149,9 +153,11 @@ export class MiniMap extends ScreenElement {
     //console.log("leveldata: ", leveldata);
     this.rooms = [];
     this.hallways = [];
+    this.mapsize = getSizeOfMap(leveldata);
+    debugger;
     leveldata.rooms.forEach((room: any) => {
       let roomColor: Color;
-      if (room.roomType === "exit") roomColor = Color.LightGray;
+      if (room.roomType === "exit") roomColor = Color.Black;
       else if (room.roomType === "key") roomColor = Color.Yellow;
       else if (room.roomType === "boss") roomColor = Color.fromHex("#8b0000");
       else if (room.roomType === "general") roomColor = Color.Blue;
@@ -202,4 +208,23 @@ function directionOfRoom(room1: Room, room2: Room): "top" | "bottom" | "left" | 
   if (room1.roomPos.y > room2.roomPos.y) return "top";
   if (room1.roomPos.x < room2.roomPos.x) return "right";
   return "left";
+}
+
+function getSizeOfMap(leveldata: any): { width: number; height: number } {
+  let width = 0;
+  let height = 0;
+  let startingRoom = leveldata.rooms[0];
+
+  for (let i = 0; i < leveldata.rooms.length; i++) {
+    let currentRoom = leveldata.rooms[i];
+    let xDistance = currentRoom.roomPos.x - startingRoom.roomPos.x;
+    let yDistance = currentRoom.roomPos.y - startingRoom.roomPos.y;
+    if (xDistance > width) width = xDistance;
+    if (yDistance > height) height = yDistance;
+  }
+
+  return {
+    width,
+    height,
+  };
 }

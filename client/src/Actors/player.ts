@@ -17,6 +17,9 @@ import { Door, RoomActor } from "./room";
 import { HallwayActor } from "./hallway";
 import { getNextBullet } from "../Lib/ObjectPools";
 import { Key } from "./Key";
+import { GameScene } from "../Scenes/Game";
+import { Treasure, TreasureDetectionRing } from "./treasure";
+import { PlayerUI } from "../UI/PlayerUI";
 
 enum StickPosition {
   "Left" = "Left",
@@ -46,6 +49,7 @@ export class Player extends Actor {
   isCollidingRight: boolean = false;
   keysInInventory: number = 0;
   canOpenDoors: boolean = true;
+  score: number = 0;
 
   constructor(pos: Vector) {
     super({
@@ -121,6 +125,14 @@ export class Player extends Actor {
     if (other.owner instanceof Key) {
       other.owner.kill();
       this.keysInInventory++;
+      (this.scene as GameScene).addKey();
+      //((this.scene as GameScene).screenUI as PlayerUI).addKey();
+    }
+
+    if (other.owner instanceof TreasureDetectionRing) {
+      this.score += other.owner.owner.value;
+      console.log("calling collect");
+      other.owner.owner.collect(this);
     }
   }
 

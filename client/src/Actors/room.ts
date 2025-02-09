@@ -25,6 +25,9 @@ import { Player } from "./player";
 import { HallwayActor } from "./hallway";
 import { Key } from "./Key";
 import { Exit } from "./Exit";
+import { GameScene } from "../Scenes/Game";
+import { Treasure } from "./treasure";
+import { getNextTreasure } from "../Lib/ObjectPools";
 
 class DoorZone extends Actor {
   private _isColliding: boolean = false;
@@ -195,6 +198,7 @@ class DoorSystem extends Actor {
     if (this.door.lockState == "Locked" && player.keysInInventory > 0) {
       this.room.unlockDoors();
       player.keysInInventory--;
+      (this.scene as GameScene).removeKey();
     } else if (this.door.lockState == "Locked" && player.keysInInventory == 0) return;
     this.door.open();
     this.door.doorState = "Open";
@@ -309,6 +313,20 @@ export class RoomActor extends Actor {
       bottomDoor.lockDoor();
       leftDoor.lockDoor();
       rightDoor.lockDoor();
+    }
+
+    if (room.roomType == RoomType.Treasure) {
+      console.log("adding treasures");
+
+      let numTreasures = Math.floor(Math.random() * 30) + 10;
+      for (let i = 0; i < numTreasures; i++) {
+        //find random spot in room
+        let x = Math.floor(Math.random() * 575) + 75 - 350;
+        let y = Math.floor(Math.random() * 400) + 75 - 250;
+        let treasure = getNextTreasure();
+        treasure.initTreasure(x, y);
+        this.addChild(treasure);
+      }
     }
 
     if (room.roomType == RoomType.Key) {
