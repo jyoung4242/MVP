@@ -98,7 +98,6 @@ export class SequenceNode extends BehaviorNode {
     }
 
     if (this.currentIndex >= this.children.length) {
-      console.log("sequence complete", this);
       this.currentIndex = 0;
       return BehaviorStatus.Success;
     }
