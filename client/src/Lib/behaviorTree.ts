@@ -128,35 +128,3 @@ export class BehaviorTree extends Component {
     this.root.update(event.engine, event.delta);
   }
 }
-
-/*
-console.log("running sequence", this);
-
-    while (this.currentIndex < this.children.length) {
-      console.log("running child", this.children[this.currentIndex], this.currentIndex);
-
-      const result = this.children[this.currentIndex].update(engine, delta);
-      if (result == BehaviorStatus.Success) {
-        console.warn("success");
-        debugger;
-      }
-      if (result === BehaviorStatus.Running) {
-        console.log("running");
-        return BehaviorStatus.Running; // Wait for current child to finish
-      }
-
-      if (result === BehaviorStatus.Failure) {
-        console.log("failed");
-        this.currentIndex = 0; // Reset index on failure
-        return BehaviorStatus.Failure;
-      }
-
-      // Move to next child on success
-      this.currentIndex++;
-    }
-
-    // If all children succeed, reset and return success
-    this.currentIndex = 0;
-    return BehaviorStatus.Success;
-
-*/
