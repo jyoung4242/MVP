@@ -155,6 +155,12 @@ export class Player extends Actor {
     }
   }
 
+  getBitten() {
+    console.log(" Player bitten ");
+
+    this.actions.blink(0.5, 0.5, 3);
+  }
+
   onPreUpdate(engine: Engine, delta: number): void {
     if (this.keypressDirections.length > 1) {
       if (this.keypressDirections.includes("Up") && this.keypressDirections.includes("Left")) this.lStick = StickPosition.UpLeft;

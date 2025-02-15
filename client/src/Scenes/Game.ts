@@ -9,7 +9,6 @@ import { HallwayActor } from "../Actors/hallway";
 import { MouseManager } from "../Lib/MouseInput";
 import { MiniMap } from "../UI/MiniMap";
 import { PlayerUI } from "../UI/PlayerUI";
-import { Enemy } from "../Actors/Enemy";
 import { getNextEnemy } from "../Lib/ObjectPools";
 
 export class GameScene extends Scene {
@@ -31,7 +30,7 @@ export class GameScene extends Scene {
   }
 
   async onActivate(
-    context: SceneActivationContext<{ gamepad: GamepadControl; keyboard: KeyboardControl; mouse: MouseManager }>
+    context: SceneActivationContext<{ gamepad: GamepadControl; keyboard: KeyboardControl; mouse: MouseManager; newGame: boolean }>
   ): Promise<void> {
     (this.uiview as UIView) = UI.create(document.getElementById("ui") as HTMLDivElement, this.uiinstance, GameSceneUI.template);
     await (this.uiview as UIView).attached;
@@ -41,7 +40,7 @@ export class GameScene extends Scene {
     const leveldata = this.levelBuilder.generateRooms(this.level);
     console.log(leveldata);
     leveldata.rooms.forEach(room => {
-      this.add(new RoomActor(room));
+      this.add(new RoomActor(room, this.level));
     });
     leveldata.edges.forEach(edge => {
       this.add(new HallwayActor(edge, leveldata.rooms));
@@ -62,10 +61,7 @@ export class GameScene extends Scene {
       let player = new Player(center);
       if (this.mouse) this.mouse.setPlayerControl(player);
       this.add(player);
-      let enemypos = player.pos.add(vec(20, 20));
-      let enemy = getNextEnemy();
-      enemy.initEnemy(enemypos);
-      this.add(enemy);
+      if (!player) return;
       this.camera.strategy.lockToActor(player);
     }
     //get screensize and adjust camera zoom
@@ -81,6 +77,8 @@ export class GameScene extends Scene {
     //add playerui
     this.screenUI = new PlayerUI(1);
     this.add(this.screenUI);
+    //reset timer
+    this.uiinstance.resetTimer();
   }
 
   async onDeactivate(context: SceneActivationContext<unknown>): Promise<void> {
@@ -113,7 +111,6 @@ export class GameScene extends Scene {
     const screensize = this.engine.screen;
     this.camera.zoom = screensize.viewport.width / 1100;
     if (this.map) this.map.resize(this.camera.zoom);
-    console.log(this.uiinstance);
     ui.style.cssText = `position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%); width: ${screensize.viewport.width}px;height: ${screensize.viewport.height}px;`;
   }
 

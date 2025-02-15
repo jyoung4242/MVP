@@ -3,8 +3,6 @@ import {
   Color,
   Rectangle,
   Vector,
-  Label,
-  Font,
   Shape,
   CompositeCollider,
   CollisionType,
@@ -12,22 +10,18 @@ import {
   Collider,
   CollisionContact,
   Side,
-  Trigger,
-  TriggerEvents,
-  TriggerOptions,
   ActorArgs,
-  Ray,
   EasingFunctions,
+  Engine,
 } from "excalibur";
 import { Room, RoomType } from "../Lib/levelBuilder";
 import { doorZoneColliderGroup, wallColliderGroup } from "../Lib/colliderGroups";
 import { Player } from "./player";
 import { HallwayActor } from "./hallway";
-import { Key } from "./Key";
-import { Exit } from "./Exit";
 import { GameScene } from "../Scenes/Game";
-import { Treasure } from "./treasure";
-import { getNextTreasure } from "../Lib/ObjectPools";
+import { RoomManager } from "../Lib/RoomManager";
+import { ActorSignals } from "../Lib/CustomEmitterManager";
+import { getNextEnemy } from "../Lib/ObjectPools";
 
 class DoorZone extends Actor {
   private _isColliding: boolean = false;
@@ -40,18 +34,14 @@ class DoorZone extends Actor {
 
   onCollisionStart(self: Collider, other: Collider, side: Side, contact: CollisionContact): void {
     if (other.owner instanceof Player || other.owner instanceof HallwayActor) this.actorsOnTrigger.push(other.owner);
-    if (other.owner instanceof Player) (this.parent as DoorSystem).openDoor(other.owner);
-    //console.log("door zone collision", this.actorsOnTrigger);
+    if (other.owner instanceof Player) ActorSignals.emit("doorTrigger", { doorSystem: this.parent, player: other.owner });
   }
 
   onCollisionEnd(self: Collider, other: Collider, side: Side, lastContact: CollisionContact): void {
     this.actorsOnTrigger = this.actorsOnTrigger.filter(actor => actor != other.owner);
-    //console.log("door zone leaving ", this.actorsOnTrigger);
   }
 
   get blockedPassage(): boolean {
-    //console.log("actors on trigger: ", this.actorsOnTrigger);
-
     return this.actorsOnTrigger.length > 0;
   }
 
@@ -88,6 +78,8 @@ export class Door extends Actor {
     this._side = side;
     this.graphics.use(doorShape);
   }
+
+  // TODO refactor to add moving state
 
   open() {
     if (this._doorState == "Open") return;
@@ -140,13 +132,14 @@ export class Door extends Actor {
   }
 }
 
-class DoorSystem extends Actor {
+export class DoorSystem extends Actor {
   door: Door;
   zone: DoorZone;
   isLocked: boolean = false;
   side: "left" | "right" | "top" | "bottom";
   doorcheckHandler: number;
   room: RoomActor;
+  roomManager: RoomManager;
 
   constructor(room: RoomActor, side: "left" | "right" | "top" | "bottom") {
     let doorPosition;
@@ -158,6 +151,7 @@ class DoorSystem extends Actor {
       else doorPosition = new Vector(0, 240);
     }
     super({ pos: doorPosition });
+    this.roomManager = room.roomManager;
     this.room = room;
     this.side = side;
     this.door = new Door(side);
@@ -186,29 +180,13 @@ class DoorSystem extends Actor {
 
     this.addChild(this.zone);
 
-    this.on("enter", data => {
-      console.log("door entered", data);
-    });
-
+    //Door closing logic
     this.doorcheckHandler = setInterval(() => this.checkDoor(), 1000);
-  }
-
-  openDoor(player: Player) {
-    if (!this.hasHallway) return;
-    if (this.door.lockState == "Locked" && player.keysInInventory > 0) {
-      this.room.unlockDoors();
-      player.keysInInventory--;
-      (this.scene as GameScene).removeKey();
-    } else if (this.door.lockState == "Locked" && player.keysInInventory == 0) return;
-    this.door.open();
-    this.door.doorState = "Open";
   }
 
   checkDoor() {
     if (this.door.doorState == "Closed") return;
     if (!this.zone.blockedPassage) {
-      //console.log(this.zone.blockedPassage);
-
       setTimeout(() => {
         this.closeDoor();
         this.door.doorState = "Closed";
@@ -256,10 +234,9 @@ class DoorSystem extends Actor {
 
 export class RoomActor extends Actor {
   roomId: string;
-  roomType: RoomType;
-  isLocked: boolean = false;
+  roomManager: RoomManager;
 
-  constructor(room: Room) {
+  constructor(room: Room, level: number) {
     let roomX = room.roomPos.x * 700 + room.roomPos.x * 500 + 350;
     let roomY = room.roomPos.y * 500 + room.roomPos.y * 500 + 250;
     let roomShape = new Rectangle({ width: 700, height: 500, color: Color.DarkGray, strokeColor: Color.White });
@@ -290,12 +267,10 @@ export class RoomActor extends Actor {
       collisionType: CollisionType.Passive,
       collisionGroup: wallColliderGroup,
     });
-    this.isLocked = room.locked ? true : false;
-    this.roomType = room.roomType;
+
+    this.roomManager = new RoomManager(this, room.roomType, level, room.locked ? true : false);
     this.graphics.use(roomShape);
     this.roomId = room.roomID;
-
-    let player = this.scene?.entities.find(e => e instanceof Player);
 
     let topDoor = new DoorSystem(this, "top");
     let bottomDoor = new DoorSystem(this, "bottom");
@@ -307,45 +282,29 @@ export class RoomActor extends Actor {
     this.addChild(leftDoor);
     this.addChild(rightDoor);
 
-    //Lock doors if Boss or Treasure
-    if (this.isLocked) {
-      topDoor.lockDoor();
-      bottomDoor.lockDoor();
-      leftDoor.lockDoor();
-      rightDoor.lockDoor();
-    }
+    this.roomManager.initialize({ leftDoor, rightDoor, topDoor, bottomDoor });
+  }
 
-    if (room.roomType == RoomType.Treasure) {
-      console.log("adding treasures");
-
-      let numTreasures = Math.floor(Math.random() * 30) + 10;
-      for (let i = 0; i < numTreasures; i++) {
-        //find random spot in room
-        let x = Math.floor(Math.random() * 575) + 75 - 350;
-        let y = Math.floor(Math.random() * 400) + 75 - 250;
-        let treasure = getNextTreasure();
-        treasure.initTreasure(x, y);
-        this.addChild(treasure);
-      }
-    }
-
-    if (room.roomType == RoomType.Key) {
-      let key = new Key();
-      this.addChild(key);
-    }
-
-    if (room.roomType == RoomType.Exit) {
-      let exit = new Exit();
-      this.addChild(exit);
-      console.log("adding exit");
+  onInitialize(engine: Engine): void {
+    if (this.roomManager.type == RoomType.Start) {
+      let enemy = getNextEnemy();
+      enemy.initEnemy(vec(250, 200), this);
+      this.addActor(enemy);
     }
   }
 
-  unlockDoors() {
-    this.scene?.entities.forEach(actor => {
-      if (actor instanceof DoorSystem) {
-        (actor as DoorSystem).unlockDoor();
-      }
-    });
+  addActor(act: Actor) {
+    this.addChild(act);
+  }
+
+  removeActor(act: Actor) {
+    this.removeChild(act);
+  }
+
+  containsActor(ent: Actor) {
+    let point = ent.pos;
+    if (point.x < this.pos.x + 350 && point.x > this.pos.x - 350 && point.y < this.pos.y + 250 && point.y > this.pos.y - 250)
+      return true;
+    return false;
   }
 }

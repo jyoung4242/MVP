@@ -46,7 +46,11 @@ export class Exit extends Actor {
       const keyboard = (this.scene as GameScene).kboard;
       const mouse = (this.scene as GameScene).mouse;
       const gamepad = (this.scene as GameScene).gpad;
-      (this.scene as GameScene).engine.goToScene("final", { sceneActivationData: { gamepad, keyboard, mouse } });
+      const finalTimeOfLevel = (this.scene as GameScene).uiinstance.LevelTimer;
+      const finalScore = (this.scene as GameScene).uiinstance.P1Score;
+      (this.scene as GameScene).engine.goToScene("final", {
+        sceneActivationData: { gamepad, keyboard, mouse, levelTime: finalTimeOfLevel, score: finalScore },
+      });
     }
   }
 }

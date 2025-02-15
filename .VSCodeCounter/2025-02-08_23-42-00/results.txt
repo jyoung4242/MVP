@@ -1,0 +1,59 @@
+Date : 2025-02-08 23:42:00
+Directory : c:\programming\_smashtv\MVP\client\src
+Total : 29 files,  2483 codes, 262 comments, 402 blanks, all 3147 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| TypeScript |         28 |      2,434 |        258 |        398 |      3,090 |
+| CSS        |          1 |         49 |          4 |          4 |         57 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                               | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                  |         29 |      2,483 |        262 |        402 |      3,147 |
+| . (Files)                                                          |          4 |        149 |         11 |         23 |        183 |
+| Actors                                                             |          8 |        788 |         18 |        106 |        912 |
+| Lib                                                                |         10 |        905 |        211 |        162 |      1,278 |
+| Scenes                                                             |          4 |        425 |         19 |         66 |        510 |
+| UI                                                                 |          3 |        216 |          3 |         45 |        264 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                           | language   | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\programming\_smashtv\MVP\client\src\Actors\Bullet.ts            | TypeScript |         21 |          1 |          4 |         26 |
+| c:\programming\_smashtv\MVP\client\src\Actors\Enemy.ts             | TypeScript |         30 |          0 |          5 |         35 |
+| c:\programming\_smashtv\MVP\client\src\Actors\Exit.ts              | TypeScript |         48 |          1 |          8 |         57 |
+| c:\programming\_smashtv\MVP\client\src\Actors\Key.ts               | TypeScript |         13 |          0 |          2 |         15 |
+| c:\programming\_smashtv\MVP\client\src\Actors\hallway.ts           | TypeScript |         71 |          3 |         13 |         87 |
+| c:\programming\_smashtv\MVP\client\src\Actors\player.ts            | TypeScript |        226 |          2 |         19 |        247 |
+| c:\programming\_smashtv\MVP\client\src\Actors\room.ts              | TypeScript |        298 |          8 |         46 |        352 |
+| c:\programming\_smashtv\MVP\client\src\Actors\treasure.ts          | TypeScript |         81 |          3 |          9 |         93 |
+| c:\programming\_smashtv\MVP\client\src\Lib\CustomEmitterManager.ts | TypeScript |         37 |         15 |          6 |         58 |
+| c:\programming\_smashtv\MVP\client\src\Lib\Gamepad.ts              | TypeScript |         77 |          1 |         11 |         89 |
+| c:\programming\_smashtv\MVP\client\src\Lib\Keyboard.ts             | TypeScript |         36 |          1 |          6 |         43 |
+| c:\programming\_smashtv\MVP\client\src\Lib\MouseInput.ts           | TypeScript |         55 |         12 |          8 |         75 |
+| c:\programming\_smashtv\MVP\client\src\Lib\ObjectPools.ts          | TypeScript |         45 |          9 |         17 |         71 |
+| c:\programming\_smashtv\MVP\client\src\Lib\RentalPool.ts           | TypeScript |         24 |         15 |          6 |         45 |
+| c:\programming\_smashtv\MVP\client\src\Lib\UUID.ts                 | TypeScript |         10 |          0 |          1 |         11 |
+| c:\programming\_smashtv\MVP\client\src\Lib\colliderGroups.ts       | TypeScript |          8 |          0 |          2 |         10 |
+| c:\programming\_smashtv\MVP\client\src\Lib\customLoader.ts         | TypeScript |        222 |         63 |         39 |        324 |
+| c:\programming\_smashtv\MVP\client\src\Lib\levelBuilder.ts         | TypeScript |        391 |         95 |         66 |        552 |
+| c:\programming\_smashtv\MVP\client\src\Scenes\Final.ts             | TypeScript |         92 |          4 |         13 |        109 |
+| c:\programming\_smashtv\MVP\client\src\Scenes\Game.ts              | TypeScript |        218 |         12 |         32 |        262 |
+| c:\programming\_smashtv\MVP\client\src\Scenes\Staging.ts           | TypeScript |         17 |          1 |          5 |         23 |
+| c:\programming\_smashtv\MVP\client\src\Scenes\Title.ts             | TypeScript |         98 |          2 |         16 |        116 |
+| c:\programming\_smashtv\MVP\client\src\UI\MiniMap.ts               | TypeScript |        195 |          3 |         38 |        236 |
+| c:\programming\_smashtv\MVP\client\src\UI\PlayerUI.ts              | TypeScript |         15 |          0 |          3 |         18 |
+| c:\programming\_smashtv\MVP\client\src\UI\UI.ts                    | TypeScript |          6 |          0 |          4 |         10 |
+| c:\programming\_smashtv\MVP\client\src\main.ts                     | TypeScript |         59 |          4 |          6 |         69 |
+| c:\programming\_smashtv\MVP\client\src\resources.ts                | TypeScript |          9 |          1 |          4 |         14 |
+| c:\programming\_smashtv\MVP\client\src\style.css                   | CSS        |         49 |          4 |          4 |         57 |
+| c:\programming\_smashtv\MVP\client\src\types.d.ts                  | TypeScript |         32 |          2 |          9 |         43 |
+| Total                                                              |            |      2,483 |        262 |        402 |      3,147 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+

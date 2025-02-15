@@ -1,5 +1,5 @@
 import { EngineEvents, EventEmitter } from "excalibur";
-import { ActorEvents } from "excalibur/build/dist/Actor";
+import { Actor, ActorEvents } from "excalibur/build/dist/Actor";
 import { Door } from "../Actors/room";
 
 export interface CustomActorEventBus extends ActorEvents {
@@ -31,9 +31,8 @@ export interface CustomActorEventBus extends ActorEvents {
   walkUpRight: {};
   idle: {};
   keypressChanged: { keypress: string[] };
-  doorTrigger: { door: Door };
+  doorTrigger: { door: Door; player: Actor };
 }
-
 export interface CustomeEngineEventBus extends EngineEvents {}
 
 export const ActorSignals = new EventEmitter<CustomActorEventBus>();

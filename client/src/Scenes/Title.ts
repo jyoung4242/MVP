@@ -90,24 +90,46 @@ class TitleSceneUI {
             display: flex;
             gap: 20px;
         }
+
+        dialog[open] {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          pointer-events: auto;
+          user-select: none;
+        }
     </style>
     <div class="controlcontainer">
-        <span>SmashTV meets Deadspace</span>
+        <span>SmashTV Like Shooter</span>
         <div class="buttoncontainer">
             <button class="startbutton" \${click@=>solo}>Solo</button>
             <button class="startbutton" \${click@=>coop}>Co-op</button>
         </div>
     </div>
 
+    <dialog \${==>dialogElement} >
+        <p>Coop mode coming soon</p>
+        <button \${click@=>closeModal}>Close</button>
+    </dialog>
+
   </div>
   `;
 
+  dialogElement: HTMLDialogElement | null = null;
+
   solo = () => {
     this.owner.engine.goToScene("game", {
-      sceneActivationData: { gamepad: this.owner.gpad, keyboard: this.owner.kboard, mouse: this.owner.mouse },
+      sceneActivationData: { gamepad: this.owner.gpad, keyboard: this.owner.kboard, mouse: this.owner.mouse, newGame: true },
     });
   };
-  coop = () => {};
+  coop = (e: any, m: any) => {
+    m.dialogElement.showModal();
+  };
+
+  closeModal = (e: any, m: any) => {
+    m.dialogElement.close();
+  };
 
   constructor(public owner: TitleScene) {}
 

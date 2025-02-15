@@ -41,15 +41,21 @@ export class MiniMap extends ScreenElement {
         let HALLWAY_WIDTH = 5; // Hallway width
         let HALLWAY_LENGTH = 10; // Hallway length in pixels
         if (numRooms == 0) return;
+        //console.log(this.mapsize.width, this.mapsize.height);
 
         if (this.mapsize.width >= 6 || this.mapsize.height >= 6) {
+          //console.log("big map");
+
           ROOM_SIZE = 12;
           HALLWAY_WIDTH = 3;
           HALLWAY_LENGTH = 5;
         } else if (this.mapsize.width >= 4 || this.mapsize.height >= 4) {
+          //console.log("medium map");
           ROOM_SIZE = 15;
           HALLWAY_WIDTH = 4;
           HALLWAY_LENGTH = 7.5;
+        } else {
+          //console.log("small map");
         }
 
         ctx.clearRect(0, 0, 250, 250);
@@ -150,11 +156,10 @@ export class MiniMap extends ScreenElement {
   }
 
   makeMap(leveldata: any) {
-    //console.log("leveldata: ", leveldata);
     this.rooms = [];
     this.hallways = [];
     this.mapsize = getSizeOfMap(leveldata);
-    debugger;
+
     leveldata.rooms.forEach((room: any) => {
       let roomColor: Color;
       if (room.roomType === "exit") roomColor = Color.Black;
@@ -217,8 +222,8 @@ function getSizeOfMap(leveldata: any): { width: number; height: number } {
 
   for (let i = 0; i < leveldata.rooms.length; i++) {
     let currentRoom = leveldata.rooms[i];
-    let xDistance = currentRoom.roomPos.x - startingRoom.roomPos.x;
-    let yDistance = currentRoom.roomPos.y - startingRoom.roomPos.y;
+    let xDistance = Math.abs(currentRoom.roomPos.x - startingRoom.roomPos.x);
+    let yDistance = Math.abs(currentRoom.roomPos.y - startingRoom.roomPos.y);
     if (xDistance > width) width = xDistance;
     if (yDistance > height) height = yDistance;
   }
